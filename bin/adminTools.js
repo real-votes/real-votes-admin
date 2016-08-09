@@ -6,8 +6,6 @@ const vorpal = require('vorpal');
 const prettyjson = require('prettyjson');
 const Pie = require('cli-pie');
 
-const User = require('../model/user');
-
 const PollBaseUrl = 'https://real-votes.herokuapp.com/api/poll/';
 const VoteBaseUrl = 'https://real-votes.herokuapp.com/api/vote/';
 
@@ -45,7 +43,7 @@ cli
         },
         auth: {
           username: 'admin',
-          password: process.env.PASSWORD || 'password',
+          password: process.env.PASSWORD,
         },
       };
 

@@ -24,9 +24,9 @@
     "vorpal": "^1.11.4"
   },
   "devDependencies": {
-    "eslint": "^3.2.2",
+    "eslint": "^3.2.2"
   },
   "bin": {
-    "realvotesadmin": "bin/adminTools.js",
-  },
+    "realvotesadmin": "bin/adminTools.js"
+  }
 }
