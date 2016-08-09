@@ -4,7 +4,7 @@
   "description": "Admin panel for the real-votes API",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "lint": "eslint bin/*.js"
   },
   "repository": {
     "type": "git",
@@ -24,7 +24,9 @@
     "vorpal": "^1.11.4"
   },
   "devDependencies": {
-    "eslint": "^3.2.2"
+    "eslint": "^3.2.2",
+    "eslint-config-airbnb-base": "^5.0.1",
+    "eslint-plugin-import": "^1.12.0"
   },
   "bin": {
     "realvotesadmin": "bin/adminTools.js"
