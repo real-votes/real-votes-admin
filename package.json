@@ -19,7 +19,9 @@
   "homepage": "https://github.com/jeffgebhardt/real-votes-admin#readme",
   "dependencies": {
     "cli-pie": "^2.2.3",
+    "eventsource": "^0.2.1",
     "prettyjson": "^1.1.3",
+    "randomcolor": "^0.4.4",
     "request": "^2.74.0",
     "vorpal": "^1.11.4"
   },
