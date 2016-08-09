@@ -1,3 +1,5 @@
+![real-votes](./resources/realVotesLogo.png)
+
 #real-votes admin console
 
 This CLI is a simple admin tool created to manage the real-votes API.
