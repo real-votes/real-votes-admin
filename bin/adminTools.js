@@ -7,11 +7,14 @@ const prettyjson = require('prettyjson');
 const Pie = require('cli-pie');
 const randomcolor = require('randomcolor');
 const EventSource = require('eventsource');
+const chalk = require('chalk');
 
 const PollBaseUrl = 'https://real-votes.herokuapp.com/api/poll/';
 const VoteBaseUrl = 'https://real-votes.herokuapp.com/api/vote/';
 
-console.log('Hello welcome to the real-votes admin console.');
+const highlight = chalk.bold.green;
+
+console.log(highlight('Hello welcome to the real-votes admin console.'));
 
 const cli = vorpal();
 
@@ -22,17 +25,17 @@ cli
       {
         type: 'input',
         name: 'pollName',
-        message: 'What would you like to name your poll? ',
+        message: highlight('What would you like to name your poll? '),
       },
       {
         type: 'input',
         name: 'choices',
-        message: 'Please enter your choices for this poll: ',
+        message: highlight('Please enter your choices for this poll: '),
       },
       {
         type: 'input',
         name: 'votesPerUser',
-        message: 'Please enter your max votes for this poll: ',
+        message: highlight('Please enter your max votes for this poll: '),
       },
     ], (answers) => {
       const options = {
@@ -53,11 +56,90 @@ cli
           this.log(err);
           return callback();
         }
-        this.log('Successfully created a poll.');
+        this.log(highlight('Successfully created a poll.'));
         callback();
       });
     });
   });
+
+cli
+  .command('viewAllVotes', 'Shows all votes')
+  .action(function(args, callback) {
+    const options = {
+      url: VoteBaseUrl,
+      auth: {
+        username: 'admin',
+        password: process.env.PASSWORD,
+      },
+    };
+    request.get(options, (err, res, body) => {
+      if (err) {
+        this.log(err);
+        return callback();
+      }
+      this.log(prettyjson.render(JSON.parse(body)));
+      callback();
+    });
+  });
+
+cli
+  .command('deleteAllPolls', 'Deletes all polls')
+  .action(function(args, callback) {
+    this.prompt({
+      type: 'input',
+      name: 'confirmation',
+      message: highlight('Are you sure you want to input all polls, \'y\' or \'n\': '),
+    },
+    (answers) => {
+      if (answers.confirmation.toLowerCase() === 'n') return callback();
+      const options = {
+        url: PollBaseUrl,
+        auth: {
+          username: 'admin',
+          password: process.env.PASSWORD,
+        },
+      };
+
+      request.delete(options, (err) => {
+        if (err) {
+          this.log(err);
+          return callback();
+        }
+        this.log(highlight('Successfully deleted all polls.'));
+        callback();
+      });
+    });
+  });
+
+cli
+  .command('deleteAllVotes', 'Deletes all votes')
+  .action(function(args, callback) {
+    this.prompt({
+      type: 'input',
+      name: 'confirmation',
+      message: highlight('Are you sure you want to delete all votes, \'y\' or \'n\': '),
+    },
+    (answers) => {
+      if (answers.confirmation.toLowerCase() === 'n') return callback();
+      const options = {
+        url: VoteBaseUrl,
+        auth: {
+          username: 'admin',
+          password: process.env.PASSWORD,
+        },
+      };
+
+      request.delete(options, (err) => {
+        if (err) {
+          this.log(err);
+          return callback();
+        }
+        this.log(highlight('Successfully deleted all votes.'));
+        callback();
+      });
+    });
+  });
+
 
 cli
   .command('updatePollStatus', 'Updates the status of a poll')
@@ -66,12 +148,12 @@ cli
       {
         type: 'input',
         name: 'id',
-        message: 'Please enter the polls id you want to update: ',
+        message: highlight('Please enter the polls id you want to update: '),
       },
       {
         type: 'input',
         name: 'pollStatus',
-        message: 'Please enter the status you want to set: ',
+        message: highlight('Please enter the status you want to set: '),
       },
     ], (answers) => {
       const options = {
@@ -88,7 +170,7 @@ cli
           this.log(err);
           return callback();
         }
-        this.log('Successfully updated poll.');
+        this.log(highlight('Successfully updated poll.'));
         callback();
       });
     });
@@ -101,7 +183,7 @@ cli
         {
           type: 'input',
           name: 'id',
-          message: 'Please enter the polls id you want to delete: ',
+          message: highlight('Please enter the polls id you want to delete: '),
         },
       ], (answers) => {
         const options = {
@@ -117,7 +199,7 @@ cli
             this.log(err);
             return callback();
           }
-          this.log('Successfully deleted poll.');
+          this.log(highlight('Successfully deleted poll.'));
           callback();
         });
       });
