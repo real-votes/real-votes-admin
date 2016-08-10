@@ -12,9 +12,12 @@ const chalk = require('chalk');
 const PollBaseUrl = 'https://real-votes.herokuapp.com/api/poll/';
 const VoteBaseUrl = 'https://real-votes.herokuapp.com/api/vote/';
 
-const highlight = chalk.bold.green;
+const green = chalk.bold.green;
+const red = chalk.bold.red;
+const blue = chalk.bold.blue;
+const title = chalk.bold.underline.yellow;
 
-console.log(highlight('Hello welcome to the real-votes admin console.'));
+console.log(title('Hello, welcome to the real-votes admin console'));
 
 const cli = vorpal();
 
@@ -25,17 +28,17 @@ cli
       {
         type: 'input',
         name: 'pollName',
-        message: highlight('What would you like to name your poll? '),
+        message: blue('What would you like to name your poll? '),
       },
       {
         type: 'input',
         name: 'choices',
-        message: 'Please enter your choices for this poll: ',
+        message: blue('Please enter your choices for this poll: '),
       },
       {
         type: 'input',
         name: 'votesPerUser',
-        message: 'Please enter your max votes for this poll: ',
+        message: blue('Please enter your max votes for this poll: '),
       },
     ], (answers) => {
       const options = {
@@ -56,7 +59,7 @@ cli
           this.log(err);
           return callback();
         }
-        this.log('Success!');
+        this.log(green('Successfully added poll!'));
         callback();
       });
     });
@@ -69,12 +72,12 @@ cli
       {
         type: 'input',
         name: 'id',
-        message: 'Please enter the polls id you want to update: ',
+        message: blue('Please enter the polls id you want to update: '),
       },
       {
         type: 'input',
         name: 'pollStatus',
-        message: 'Please enter the status you want to set: ',
+        message: blue('Please enter the status you want to set: '),
       },
     ], (answers) => {
       const options = {
@@ -91,7 +94,7 @@ cli
           this.log(err);
           return callback();
         }
-        this.log('Success!');
+        this.log(green('Successfully updated poll!'));
         callback();
       });
     });
@@ -104,7 +107,7 @@ cli
         {
           type: 'input',
           name: 'id',
-          message: 'Please enter the polls id you want to delete: ',
+          message: blue('Please enter the polls ID you want to delete: '),
         },
       ], (answers) => {
         const options = {
@@ -120,7 +123,7 @@ cli
             this.log(err);
             return callback();
           }
-          this.log('Success!');
+          this.log(green('Successfully deleted poll!'));
           callback();
         });
       });
@@ -165,7 +168,7 @@ cli
     this.prompt({
       type: 'input',
       name: 'confirmation',
-      message: 'Are you sure you want to input all polls, \'y\' or \'n\': ',
+      message: red('Are you sure you want to input all polls, \'y\' or \'n\': '),
     },
     (answers) => {
       if (answers.confirmation.toLowerCase() === 'n') return callback();
@@ -182,7 +185,7 @@ cli
           this.log(err);
           return callback();
         }
-        this.log('Success');
+        this.log(green('Successfully deleted all polls.'));
         callback();
       });
     });
@@ -194,7 +197,7 @@ cli
     this.prompt({
       type: 'input',
       name: 'confirmation',
-      message: 'Are you sure you want to delete all votes, \'y\' or \'n\': ',
+      message: red('Are you sure you want to delete all votes, \'y\' or \'n\': '),
     },
     (answers) => {
       if (answers.confirmation.toLowerCase() === 'n') return callback();
@@ -211,7 +214,63 @@ cli
           this.log(err);
           return callback();
         }
-        this.log('Success');
+        this.log(green('Successfully deleted all votes.'));
+        callback();
+      });
+    });
+  });
+
+cli
+  .command('viewOnePollVotes', 'View votes for a single poll.')
+  .action(function(args, callback) {
+    this.prompt({
+      type: 'input',
+      name: 'pollId',
+      message: blue('Enter the ID of the Poll you want to view votes for: '),
+    },
+    (answers) => {
+      const options = {
+        url: `${PollBaseUrl}${answers.pollId}/users`,
+        auth: {
+          username: 'admin',
+          password: process.env.PASSWORD,
+        },
+      };
+
+      request.get(options, (err, res, body) => {
+        if (err) {
+          this.log(err);
+          return callback();
+        }
+        this.log(prettyjson.render(JSON.parse(body)));
+        callback();
+      });
+    });
+  });
+
+cli
+  .command('deleteOnePollVotes', 'Delete votes for a single poll.')
+  .action(function(args, callback) {
+    this.prompt({
+      type: 'input',
+      name: 'pollId',
+      message: blue('Enter the ID of the Poll you want to delete all votes for: '),
+    },
+    (answers) => {
+      const options = {
+        url: `${PollBaseUrl}${answers.pollId}/users`,
+        auth: {
+          username: 'admin',
+          password: process.env.PASSWORD,
+        },
+      };
+
+      request.delete(options, (err, res, body) => {
+        if (err) {
+          this.log(err);
+          return callback();
+        }
+        this.log(prettyjson.render(JSON.parse(body)));
         callback();
       });
     });
@@ -219,6 +278,10 @@ cli
 
 function renderTally(results) {
   const chart = new Pie(10, [], { legend: true });
+
+  if (Object.keys(results.votes).length === 0) {
+    return 'No votes have been cast';
+  }
 
   const colorPalette = randomcolor({
     format: 'rgbArray',
@@ -245,6 +308,12 @@ cli
         this.log(err);
         return callback();
       }
+
+      if (res.statusCode === 404) {
+        this.log(chalk.red.bold('There is no poll currently in progress'));
+        return callback();
+      }
+
       const results = JSON.parse(body);
       this.log(renderTally(results));
       callback();
@@ -263,22 +332,28 @@ cli
         this.log(err);
         return callback();
       }
+
+      if (res.statusCode === 404) {
+        this.log(chalk.red.bold('There is no poll currently in progress'));
+        return callback();
+      }
+
       const results = JSON.parse(body);
       process.stdout.write('\u001bc');
       this.log(renderTally(results));
+
+      // Subscribe to tally updates
+      const es = new EventSource(`${VoteBaseUrl}tally/stream`);
+
+      es.addEventListener('message', (e) => {
+        const data = JSON.parse(e.data);
+        if (data === 'heartbeat') return;
+
+        // Clear the console
+        process.stdout.write('\u001bc');
+        this.log(renderTally(JSON.parse(data)));
+      }, false);
     });
-
-    // Subscribe to tally updates
-    const es = new EventSource(`${VoteBaseUrl}tally/stream`);
-
-    es.addEventListener('message', (e) => {
-      const data = JSON.parse(e.data);
-      if (data === 'heartbeat') return;
-
-      // Clear the console
-      process.stdout.write('\u001bc');
-      this.log(renderTally(JSON.parse(data)));
-    }, false);
   });
 
 cli
