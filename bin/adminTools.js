@@ -30,12 +30,12 @@ cli
       {
         type: 'input',
         name: 'choices',
-        message: highlight('Please enter your choices for this poll: '),
+        message: 'Please enter your choices for this poll: ',
       },
       {
         type: 'input',
         name: 'votesPerUser',
-        message: highlight('Please enter your max votes for this poll: '),
+        message: 'Please enter your max votes for this poll: ',
       },
     ], (answers) => {
       const options = {
@@ -56,9 +56,86 @@ cli
           this.log(err);
           return callback();
         }
-        this.log(highlight('Successfully created a poll.'));
+        this.log('Success!');
         callback();
       });
+    });
+  });
+
+cli
+  .command('updatePollStatus', 'Updates the status of a poll')
+  .action(function(args, callback) {
+    this.prompt([
+      {
+        type: 'input',
+        name: 'id',
+        message: 'Please enter the polls id you want to update: ',
+      },
+      {
+        type: 'input',
+        name: 'pollStatus',
+        message: 'Please enter the status you want to set: ',
+      },
+    ], (answers) => {
+      const options = {
+        url: PollBaseUrl + answers.id,
+        json: { pollStatus: answers.pollStatus },
+        auth: {
+          username: 'admin',
+          password: process.env.PASSWORD,
+        },
+      };
+
+      request.put(options, (err) => {
+        if (err) {
+          this.log(err);
+          return callback();
+        }
+        this.log('Success!');
+        callback();
+      });
+    });
+  });
+
+cli
+    .command('deletePoll', 'deletes one poll')
+    .action(function(args, callback) {
+      this.prompt([
+        {
+          type: 'input',
+          name: 'id',
+          message: 'Please enter the polls id you want to delete: ',
+        },
+      ], (answers) => {
+        const options = {
+          url: PollBaseUrl + answers.id,
+          auth: {
+            username: 'admin',
+            password: process.env.PASSWORD,
+          },
+        };
+
+        request.delete(options, (err) => {
+          if (err) {
+            this.log(err);
+            return callback();
+          }
+          this.log('Success!');
+          callback();
+        });
+      });
+    });
+
+cli
+  .command('viewAllPolls', 'Shows all polls')
+  .action(function(args, callback) {
+    request.get(PollBaseUrl, (err, res, body) => {
+      if (err) {
+        this.log(err);
+        return callback();
+      }
+      this.log(prettyjson.render(JSON.parse(body)));
+      callback();
     });
   });
 
@@ -88,7 +165,7 @@ cli
     this.prompt({
       type: 'input',
       name: 'confirmation',
-      message: highlight('Are you sure you want to input all polls, \'y\' or \'n\': '),
+      message: 'Are you sure you want to input all polls, \'y\' or \'n\': ',
     },
     (answers) => {
       if (answers.confirmation.toLowerCase() === 'n') return callback();
@@ -105,7 +182,7 @@ cli
           this.log(err);
           return callback();
         }
-        this.log(highlight('Successfully deleted all polls.'));
+        this.log('Success');
         callback();
       });
     });
@@ -117,7 +194,7 @@ cli
     this.prompt({
       type: 'input',
       name: 'confirmation',
-      message: highlight('Are you sure you want to delete all votes, \'y\' or \'n\': '),
+      message: 'Are you sure you want to delete all votes, \'y\' or \'n\': ',
     },
     (answers) => {
       if (answers.confirmation.toLowerCase() === 'n') return callback();
@@ -134,87 +211,9 @@ cli
           this.log(err);
           return callback();
         }
-        this.log(highlight('Successfully deleted all votes.'));
+        this.log('Success');
         callback();
       });
-    });
-  });
-
-
-cli
-  .command('updatePollStatus', 'Updates the status of a poll')
-  .action(function(args, callback) {
-    this.prompt([
-      {
-        type: 'input',
-        name: 'id',
-        message: highlight('Please enter the polls id you want to update: '),
-      },
-      {
-        type: 'input',
-        name: 'pollStatus',
-        message: highlight('Please enter the status you want to set: '),
-      },
-    ], (answers) => {
-      const options = {
-        url: PollBaseUrl + answers.id,
-        json: { pollStatus: answers.pollStatus },
-        auth: {
-          username: 'admin',
-          password: process.env.PASSWORD,
-        },
-      };
-
-      request.put(options, (err) => {
-        if (err) {
-          this.log(err);
-          return callback();
-        }
-        this.log(highlight('Successfully updated poll.'));
-        callback();
-      });
-    });
-  });
-
-cli
-    .command('deletePoll', 'deletes one poll')
-    .action(function(args, callback) {
-      this.prompt([
-        {
-          type: 'input',
-          name: 'id',
-          message: highlight('Please enter the polls id you want to delete: '),
-        },
-      ], (answers) => {
-        const options = {
-          url: PollBaseUrl + answers.id,
-          auth: {
-            username: 'admin',
-            password: process.env.PASSWORD,
-          },
-        };
-
-        request.delete(options, (err) => {
-          if (err) {
-            this.log(err);
-            return callback();
-          }
-          this.log(highlight('Successfully deleted poll.'));
-          callback();
-        });
-      });
-    });
-
-cli
-  .command('viewAllPolls', 'Shows all polls')
-  .action(function(args, callback) {
-    request.get(PollBaseUrl, (err, res, body) => {
-      if (err) {
-        this.log(err);
-        return callback();
-      }
-      this.log(prettyjson.render(JSON.parse(body)));
-      callback();
     });
   });
 
