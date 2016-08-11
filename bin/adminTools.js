@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 'use strict'; //eslint-disable-line
 
+
 const request = require('request');
 const vorpal = require('vorpal');
 const prettyjson = require('prettyjson');
@@ -16,6 +17,11 @@ const green = chalk.bold.green;
 const red = chalk.bold.red;
 const blue = chalk.bold.blue;
 const title = chalk.bold.underline.yellow;
+
+if (!process.env.PASSWORD) {
+  console.log(red('Must set PASSWORD environment variable'));
+  process.exit(1);
+}
 
 console.log(title('Hello, welcome to the real-votes admin console'));
 
