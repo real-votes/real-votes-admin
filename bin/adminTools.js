@@ -32,7 +32,7 @@ function inputVer(promptInput) {
 }
 
 cli
-  .command('addPoll', 'Creates a new poll')
+  .command('createPoll', 'Creates a new poll')
   .action(function(args, callback) {
     this.prompt([
       {
@@ -81,7 +81,7 @@ cli
           return callback();
         }
 
-        this.log(green('Successfully added poll!'));
+        this.log(green('Successfully created poll!'));
         callback();
       });
     });
@@ -94,7 +94,7 @@ cli
       {
         type: 'input',
         name: 'id',
-        message: blue('Please enter the polls id you want to update: '),
+        message: blue('Please enter the polls ID you want to update: '),
       },
       {
         type: 'input',
@@ -134,49 +134,9 @@ cli
     });
   });
 
-cli
-    .command('deletePoll', 'deletes one poll')
-    .action(function(args, callback) {
-      this.prompt([
-        {
-          type: 'input',
-          name: 'id',
-          message: blue('Please enter the polls ID you want to delete: '),
-        },
-      ], (answers) => {
-        const input = inputVer(answers);
-        if (input === true) {
-          this.log(red('Invalid input, exiting command...'));
-          return callback();
-        }
-
-        const options = {
-          url: PollBaseUrl + answers.id,
-          auth: {
-            username: 'admin',
-            password: process.env.PASSWORD,
-          },
-        };
-
-        request.delete(options, (err, res) => {
-          if (err) {
-            this.log(err);
-            return callback();
-          }
-
-          if (res.statusCode !== 200) {
-            this.log(red('Invalid input, exiting command...'));
-            return callback();
-          }
-
-          this.log(green('Successfully deleted poll!'));
-          callback();
-        });
-      });
-    });
 
 cli
-  .command('viewAllPolls', 'Shows all polls')
+  .command('readAllPolls', 'Read all polls')
   .action(function(args, callback) {
     request.get(PollBaseUrl, (err, res, body) => {
       if (err) {
@@ -195,7 +155,7 @@ cli
   });
 
 cli
-  .command('viewAllVotes', 'Shows all votes')
+  .command('readAllVotes', 'Shows all votes')
   .action(function(args, callback) {
     const options = {
       url: VoteBaseUrl,
@@ -220,13 +180,95 @@ cli
     });
   });
 
+
 cli
-  .command('deleteAllPolls', 'Deletes all polls')
+.command('readOnePollVotes', 'Read votes for a single poll.')
+.action(function(args, callback) {
+  this.prompt({
+    type: 'input',
+    name: 'pollId',
+    message: blue('Enter the ID of the poll you want to view votes for: '),
+  },
+  (answers) => {
+    const input = inputVer(answers);
+    if (input === true) {
+      this.log(red('Invalid input, exiting command...'));
+      return callback();
+    }
+
+    const options = {
+      url: `${PollBaseUrl}${answers.pollId}/users`,
+      auth: {
+        username: 'admin',
+        password: process.env.PASSWORD,
+      },
+    };
+
+    request.get(options, (err, res, body) => {
+      if (err) {
+        this.log(err);
+        return callback();
+      }
+
+      if (res.statusCode !== 200) {
+        this.log(red('Invalid input, exiting command...'));
+        return callback();
+      }
+
+      this.log(prettyjson.render(JSON.parse(body)));
+      callback();
+    });
+  });
+});
+
+cli
+.command('destroyOnePoll', 'Destroys one poll')
+.action(function(args, callback) {
+  this.prompt([
+    {
+      type: 'input',
+      name: 'id',
+      message: blue('Please enter the polls ID you want to delete: '),
+    },
+  ], (answers) => {
+    const input = inputVer(answers);
+    if (input === true) {
+      this.log(red('Invalid input, exiting command...'));
+      return callback();
+    }
+
+    const options = {
+      url: PollBaseUrl + answers.id,
+      auth: {
+        username: 'admin',
+        password: process.env.PASSWORD,
+      },
+    };
+
+    request.delete(options, (err, res) => {
+      if (err) {
+        this.log(err);
+        return callback();
+      }
+
+      if (res.statusCode !== 200) {
+        this.log(red('Invalid input, exiting command...'));
+        return callback();
+      }
+
+      this.log(green('Successfully destroyed poll!'));
+      callback();
+    });
+  });
+});
+
+cli
+  .command('destroyAllPolls', 'Deletes all polls')
   .action(function(args, callback) {
     this.prompt({
       type: 'input',
       name: 'confirmation',
-      message: red('Are you sure you want to input all polls, \'y\' or \'n\': '),
+      message: red('Are you sure you want to destroy all polls, \'y\' or \'n\': '),
     },
     (answers) => {
       const input = inputVer(answers);
@@ -255,19 +297,19 @@ cli
           return callback();
         }
 
-        this.log(green('Successfully deleted all polls.'));
+        this.log(green('Successfully destroyed all polls.'));
         callback();
       });
     });
   });
 
 cli
-  .command('deleteAllVotes', 'Deletes all votes')
+  .command('destroyAllVotes', 'Destroy all votes')
   .action(function(args, callback) {
     this.prompt({
       type: 'input',
       name: 'confirmation',
-      message: red('Are you sure you want to delete all votes, \'y\' or \'n\': '),
+      message: red('Are you sure you want to destroy all votes, \'y\' or \'n\': '),
     },
     (answers) => {
       const input = inputVer(answers);
@@ -296,59 +338,19 @@ cli
           return callback();
         }
 
-        this.log(green('Successfully deleted all votes.'));
+        this.log(green('Successfully destroyed all votes.'));
         callback();
       });
     });
   });
 
 cli
-  .command('viewOnePollVotes', 'View votes for a single poll.')
+  .command('destroyOnePollVotes', 'Destroy votes for a single poll.')
   .action(function(args, callback) {
     this.prompt({
       type: 'input',
       name: 'pollId',
-      message: blue('Enter the ID of the Poll you want to view votes for: '),
-    },
-    (answers) => {
-      const input = inputVer(answers);
-      if (input === true) {
-        this.log(red('Invalid input, exiting command...'));
-        return callback();
-      }
-
-      const options = {
-        url: `${PollBaseUrl}${answers.pollId}/users`,
-        auth: {
-          username: 'admin',
-          password: process.env.PASSWORD,
-        },
-      };
-
-      request.get(options, (err, res, body) => {
-        if (err) {
-          this.log(err);
-          return callback();
-        }
-
-        if (res.statusCode !== 200) {
-          this.log(red('Invalid input, exiting command...'));
-          return callback();
-        }
-
-        this.log(prettyjson.render(JSON.parse(body)));
-        callback();
-      });
-    });
-  });
-
-cli
-  .command('deleteOnePollVotes', 'Delete votes for a single poll.')
-  .action(function(args, callback) {
-    this.prompt({
-      type: 'input',
-      name: 'pollId',
-      message: blue('Enter the ID of the Poll you want to delete all votes for: '),
+      message: blue('Enter the ID of the poll you want to destroy all votes for: '),
     },
     (answers) => {
       const input = inputVer(answers);
@@ -407,7 +409,7 @@ function renderTally(results) {
 }
 
 cli
-  .command('showResults', 'Show the results of the current poll')
+  .command('readResults', 'Read the results of the current poll')
   .action(function(args, callback) {
     request.get(`${VoteBaseUrl}tally`, (err, res, body) => {
       if (err) {
@@ -428,8 +430,8 @@ cli
 
 cli
   .command(
-    'showRealtimeResults',
-    'Show the results of the current poll and keep them updated in real time'
+    'readRealtimeResults',
+    'Read the results of the current poll and keep them updated in real time'
   )
   .action(function(args, callback) {
     // Get the initial tally
